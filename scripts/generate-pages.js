@@ -250,7 +250,7 @@ function mapUrl(shop) {
   return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${shop.name} ${shop.address}`)}`;
 }
 
-const GOOGLE_MAPS_EMBED_KEY = "YOUR_GOOGLE_MAPS_EMBED_KEY";
+const GOOGLE_MAPS_EMBED_KEY = "AIzaSyAZr_zX1zuPGEgmU2zm-wTsd1j9Cfo15z0";
 
 function mapEmbeds(items) {
   if (!items.length) return "";
@@ -258,7 +258,7 @@ function mapEmbeds(items) {
 }
 
 function vcUrl(targetUrl) {
-  return `https://ck.jp.ap.valuecommerce.com/servlet/referral?sid=YOUR_VC_SID&pid=YOUR_VC_PID&vc_url=${encodeURIComponent(targetUrl)}`;
+  return `https://ck.jp.ap.valuecommerce.com/servlet/referral?sid=3771711&pid=892675357&vc_url=${encodeURIComponent(targetUrl)}`;
 }
 
 function searchUrl(keyword) {
