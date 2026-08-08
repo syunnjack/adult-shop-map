@@ -308,8 +308,14 @@ function bookingUrl(area, genre) {
   return vcUrl(`https://www.hotpepper.jp/?keyword=${encodeURIComponent(`${area.label} ${genre.label}`)}`);
 }
 
+const RAKUTEN_AFFILIATE_ID = "13078974.c074128c.13078975.03b0a557";
+
+function rakutenAffiliateUrl(targetUrl) {
+  return `https://hb.afl.rakuten.co.jp/hgc/${RAKUTEN_AFFILIATE_ID}/?pc=${encodeURIComponent(targetUrl)}&m=${encodeURIComponent(targetUrl)}`;
+}
+
 function couponUrl(genre) {
-  return `https://search.rakuten.co.jp/search/mall/${encodeURIComponent(`${genre.label} クーポン`)}/`;
+  return rakutenAffiliateUrl(`https://search.rakuten.co.jp/search/mall/${encodeURIComponent(`${genre.label} クーポン`)}/`);
 }
 
 function shoppingUrl(genre) {
@@ -339,7 +345,7 @@ function shoppingUrl(genre) {
     "office-tenant": "店舗 開業 備品 オフィス家具",
     "opening-area-research": "店舗 看板 チラシ 防犯カメラ"
   };
-  return `https://search.rakuten.co.jp/search/mall/${encodeURIComponent(keywords[genre.key] || `${genre.label} 関連商品`)}/`;
+  return rakutenAffiliateUrl(`https://search.rakuten.co.jp/search/mall/${encodeURIComponent(keywords[genre.key] || `${genre.label} 関連商品`)}/`);
 }
 
 const eventGenreKeys = new Set(["darts", "bowling", "billiards"]);

@@ -19,8 +19,11 @@ function vcUrl(targetUrl) {
   return `https://ck.jp.ap.valuecommerce.com/servlet/referral?sid=3771711&pid=892675357&vc_url=${encodeURIComponent(targetUrl)}`;
 }
 
+const RAKUTEN_AFFILIATE_ID = "13078974.c074128c.13078975.03b0a557";
+
 function rakutenUrl(keyword) {
-  return `https://search.rakuten.co.jp/search/mall/${encodeURIComponent(keyword)}/`;
+  const targetUrl = `https://search.rakuten.co.jp/search/mall/${encodeURIComponent(keyword)}/`;
+  return `https://hb.afl.rakuten.co.jp/hgc/${RAKUTEN_AFFILIATE_ID}/?pc=${encodeURIComponent(targetUrl)}&m=${encodeURIComponent(targetUrl)}`;
 }
 
 function searchUrl(keyword) {

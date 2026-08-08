@@ -12,9 +12,9 @@
   },
   "rakuten": {
     "ichiba_item_search_endpoint": "https://openapi.rakuten.co.jp/ichibams/api/IchibaItem/Search/20260701",
-    "application_id": "YOUR_RAKUTEN_APP_ID",
+    "application_id": "8a19b314-1b35-492b-a30c-fdd830b51e99",
     "access_key": "",
-    "affiliate_id": "YOUR_RAKUTEN_AFFILIATE_ID",
+    "affiliate_id": "13078974.c074128c.13078975.03b0a557",
     "format": "json",
     "format_version": 2,
     "default_sort": "+itemPrice"

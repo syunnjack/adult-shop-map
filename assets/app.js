@@ -100,8 +100,11 @@ function vcLink(targetUrl) {
   return `${valueCommerce.redirectBase}?sid=${valueCommerce.sid}&pid=${valueCommerce.pid}&vc_url=${encodeURIComponent(targetUrl)}`;
 }
 
+const rakutenAffiliateId = "13078974.c074128c.13078975.03b0a557";
+
 function rakutenSearchLink(keyword) {
-  return `https://search.rakuten.co.jp/search/mall/${encodeURIComponent(keyword)}/`;
+  const targetUrl = `https://search.rakuten.co.jp/search/mall/${encodeURIComponent(keyword)}/`;
+  return `https://hb.afl.rakuten.co.jp/hgc/${rakutenAffiliateId}/?pc=${encodeURIComponent(targetUrl)}&m=${encodeURIComponent(targetUrl)}`;
 }
 
 function searchLink(keyword) {
