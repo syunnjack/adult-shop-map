@@ -309,9 +309,15 @@ function bookingUrl(area, genre) {
 }
 
 const RAKUTEN_AFFILIATE_ID = "13078974.c074128c.13078975.03b0a557";
+const DMM_AFFILIATE_ID = "syunnda1-997";
 
 function rakutenAffiliateUrl(targetUrl) {
   return `https://hb.afl.rakuten.co.jp/hgc/${RAKUTEN_AFFILIATE_ID}/?pc=${encodeURIComponent(targetUrl)}&m=${encodeURIComponent(targetUrl)}`;
+}
+
+function fanzaAffiliateUrl(keyword) {
+  const targetUrl = `https://www.dmm.co.jp/mono/-/search/=/searchstr=${encodeURIComponent(keyword)}/`;
+  return `https://al.dmm.co.jp/?lurl=${encodeURIComponent(targetUrl)}&af_id=${DMM_AFFILIATE_ID}&ch=link_tool&ch_id=link`;
 }
 
 function couponUrl(genre) {
@@ -405,7 +411,10 @@ function subtleLinks(area, genre, depth) {
   if (genre.key === "opening-area-research") {
     return `<section class="side-block subtle-links"><h2>開業前に確認</h2><a href="${openingResearchUrl(area)}">周辺を調べる</a><a href="${home(depth)}area/${area.prefecture_key}/${area.path}/">周辺ジャンルを見る</a><a href="${shoppingUrl(genre)}">開業準備品</a><a href="${home(depth)}">条件を変えて探す</a></section>`;
   }
-  return `<section class="side-block subtle-links"><h2>行く前に確認</h2><a href="${bookingUrl(area, genre)}">予約できる店</a><a href="${couponUrl(genre)}">クーポンを探す</a><a href="${shoppingUrl(genre)}">${genre.key === "adult-shop" ? "通販を見る" : "関連アイテム"}</a><a href="${home(depth)}">条件を変えて探す</a></section>`;
+  if (genre.key === "adult-shop") {
+    return `<section class="side-block subtle-links"><h2>行く前に確認</h2><a href="${bookingUrl(area, genre)}">予約できる店</a><a href="${couponUrl(genre)}">クーポンを探す</a><a href="${shoppingUrl(genre)}">楽天で通販を見る</a><a href="${fanzaAffiliateUrl(genre.label)}">FANZAで通販を見る</a><a href="${home(depth)}">条件を変えて探す</a></section>`;
+  }
+  return `<section class="side-block subtle-links"><h2>行く前に確認</h2><a href="${bookingUrl(area, genre)}">予約できる店</a><a href="${couponUrl(genre)}">クーポンを探す</a><a href="${shoppingUrl(genre)}">関連アイテム</a><a href="${home(depth)}">条件を変えて探す</a></section>`;
 }
 
 function primaryActionLabel(shop) {
