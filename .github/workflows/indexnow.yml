@@ -1,0 +1,33 @@
+name: IndexNow
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  submit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Wait for deployment
+        run: |
+          set +e
+          for i in $(seq 1 30); do
+            if curl -fsS https://adult-shop-map.jp/sitemap.xml | grep -q '<lastmod>'; then
+              echo "Deployment ready"
+              exit 0
+            fi
+            echo "Waiting for deployment... ($i/30)"
+            sleep 20
+          done
+          echo "Timed out waiting for deployment; submitting URLs anyway"
+
+      - name: Submit URLs to IndexNow
+        env:
+          INDEXNOW_KEY: ${{ secrets.INDEXNOW_KEY }}
+        run: |
+          KEY="${INDEXNOW_KEY:-7276a5da06717250820252315f60425f}"
+          curl -fsS -X POST "https://api.indexnow.org/indexnow" \
+            -H "Content-Type: application/json; charset=utf-8" \
+            -d "{\"host\":\"adult-shop-map.jp\",\"key\":\"${KEY}\",\"keyLocation\":\"https://adult-shop-map.jp/${KEY}.txt\",\"urlList\":[\"https://adult-shop-map.jp/\",\"https://adult-shop-map.jp/area/aichi/\",\"https://adult-shop-map.jp/area/shizuoka/\"]}"
