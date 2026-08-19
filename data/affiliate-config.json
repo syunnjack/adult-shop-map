@@ -19,5 +19,6 @@
     "format_version": 2,
     "default_sort": "+itemPrice"
   },
-  "note": "画面には専門用語を表示せず、予約、クーポン、通販、周辺情報として用途別にリンク先を差し替えます。"
+  "note": "画面には専門用語を表示せず、予約、クーポン、通販、周辺情報として用途別にリンク先を差し替えます。",
+  "_note_credentials": "秘密鍵はここに書かない。api_key と access_key は環境変数（HOTPEPPER_API_KEY / RAKUTEN_ACCESS_KEY）から渡すこと。application_id や valuecommerce の sid/pid はリンクに現れる値なのでここで持つ。"
 }
