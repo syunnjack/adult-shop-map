@@ -23,11 +23,32 @@ jobs:
           done
           echo "Timed out waiting for deployment; submitting URLs anyway"
 
+      # 送るURLは sitemap.xml から取る。以前は愛知と静岡だけを直書きしていたので、
+      # 全国にエリアが増えても新しいページが通知されなかった。
+      # IndexNow は1回あたり1万件までなので、多くても先頭1000件に絞る。
       - name: Submit URLs to IndexNow
         env:
           INDEXNOW_KEY: ${{ secrets.INDEXNOW_KEY }}
         run: |
-          KEY="${INDEXNOW_KEY:-7276a5da06717250820252315f60425f}"
+          export KEY="${INDEXNOW_KEY:-7276a5da06717250820252315f60425f}"
+          curl -fsS https://adult-shop-map.jp/sitemap.xml -o sitemap.xml
+          node -e '
+            const fs = require("node:fs");
+            const xml = fs.readFileSync("sitemap.xml", "utf8");
+            const urls = [...xml.matchAll(/<loc>\s*([^<\s]+)\s*<\/loc>/g)]
+              .map((m) => m[1])
+              .filter((u) => u.startsWith("https://adult-shop-map.jp/"))
+              .slice(0, 1000);
+            if (!urls.length) throw new Error("sitemap.xml からURLを取り出せませんでした");
+            const key = process.env.KEY;
+            fs.writeFileSync("payload.json", JSON.stringify({
+              host: "adult-shop-map.jp",
+              key,
+              keyLocation: `https://adult-shop-map.jp/${key}.txt`,
+              urlList: urls,
+            }));
+            console.log(`送信するURL: ${urls.length}件`);
+          '
           curl -fsS -X POST "https://api.indexnow.org/indexnow" \
             -H "Content-Type: application/json; charset=utf-8" \
-            -d "{\"host\":\"adult-shop-map.jp\",\"key\":\"${KEY}\",\"keyLocation\":\"https://adult-shop-map.jp/${KEY}.txt\",\"urlList\":[\"https://adult-shop-map.jp/\",\"https://adult-shop-map.jp/area/aichi/\",\"https://adult-shop-map.jp/area/shizuoka/\"]}"
+            --data-binary @payload.json

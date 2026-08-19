@@ -537,17 +537,11 @@ const additions = [
   ["chiba-chuo-starbucks-perie", "スターバックス ペリエ千葉店", "cafe", "chiba-chuo", "千葉県千葉市中央区新千葉1丁目1-1 ペリエ千葉2F", "千葉駅", 1, 600, "目安600円から", false, true, true, "千葉駅周辺", "https://www.perie.co.jp/chiba/floorguide/detail/?id=406", "禁煙", "要確認", "あり", "あり"]
 ];
 
+// ゲームセンターやコンビニのシードは machi-list から引き継いだもので、
+// このサイトのジャンル（アダルトショップ）には該当しないため削除した。
+// 残っているのは Google Places の審査フローが書き出す承認済みファイルだけ。
 const seedAdditionFiles = [
-  "data/seed-shops.json",
   "data/seed-place-approved.json",
-  "data/seed-round1-major-cities.json",
-  "data/seed-gigo-kaikatsu-major-cities.json",
-  "data/seed-capsule-toy-major-cities.json",
-  "data/seed-capsule-toy-pref-capitals.json",
-  "data/seed-amenity-and-late-night-major-cities.json",
-  "data/seed-arcade-crane-major-cities.json",
-  "data/seed-station-amenity-pref-capitals.json",
-  "data/seed-metropolitan-secondary-cities.json",
 ];
 
 for (const seedAdditionPath of seedAdditionFiles) {

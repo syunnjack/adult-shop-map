@@ -580,7 +580,7 @@ function pageShell({ title, description, canonical, depth, body, structuredData 
     <main>
 ${body}
     </main>
-    <footer class="site-footer"><p>© 2026 アダルトショップマップ</p><p>掲載情報は変更される場合があります。ご来店前に公式情報もあわせてご確認ください。</p><p><a href="${home(depth)}llms.txt">llms.txt</a></p></footer>
+    <footer class="site-footer"><p>© 2026 アダルトショップマップ</p><p>掲載情報は変更される場合があります。ご来店前に公式情報もあわせてご確認ください。</p><p>店舗の位置・名称の一部は <a href="https://www.openstreetmap.org/copyright" rel="nofollow noopener" target="_blank">© OpenStreetMap contributors</a>（ODbL 1.0）、市区町村の判定は<a href="https://maps.gsi.go.jp/" rel="nofollow noopener" target="_blank">国土地理院</a>の逆ジオコーディングによります。</p><p><a href="${home(depth)}llms.txt">llms.txt</a></p></footer>
     <script>
       (function () {
         if (sessionStorage.getItem("age-verified") === "1") {
@@ -598,6 +598,20 @@ ${body}
   </body>
 </html>
 `;
+}
+
+// 徒歩分数が分かっている店だけを返す。未取得は空文字や null で入っており、
+// Number("") は 0 になるので、そのまま比較すると「徒歩8分以内」に混ざる。
+function walkMinutes(shop) {
+  const minutes = Number(shop.station_walk_minutes);
+  return Number.isFinite(minutes) && minutes > 0 ? minutes : null;
+}
+
+// 最寄駅と徒歩分数が両方そろっているときだけ文にする。
+function stationLine(shop) {
+  const minutes = walkMinutes(shop);
+  if (!shop.nearest_station || !minutes) return "";
+  return `${escapeHtml(shop.nearest_station)}から徒歩約${minutes}分`;
 }
 
 function featureBadges(shop) {
@@ -622,7 +636,7 @@ function shopCards(items, depth) {
               <article class="shop-card">
                 <div>
                   <h3><a href="${toRelative(shop.url, depth)}">${escapeHtml(shop.name)}</a></h3>
-                  <p>${escapeHtml(shop.address)} / ${escapeHtml(shop.nearest_station)}から徒歩約${escapeHtml(shop.station_walk_minutes)}分</p>
+                  <p>${[escapeHtml(shop.address), stationLine(shop)].filter(Boolean).join(" / ")}</p>
                   <div class="badges">${featureBadges(shop)}</div>
                 </div>
                 <div class="shop-actions">
@@ -716,46 +730,39 @@ function topGenresForArea(area, limit = 8) {
     .slice(0, limit);
 }
 
+// このサイトのジャンルはアダルトショップだけなので、リンク先はすべてその一覧になる。
+// 以前はコンビニやネットカフェのページを指していたが、そのページは生成されない。
 const areaUseCases = [
   {
     label: "駅近で探す",
-    note: "駅から歩きやすい施設を先に見る",
-    hrefGenre: "convenience-store",
-    filter: (shop) => Number(shop.station_walk_minutes) <= 8
+    note: "駅から歩きやすい店を先に見る",
+    filter: (shop) => {
+      const minutes = walkMinutes(shop);
+      return minutes !== null && minutes <= 8;
+    }
   },
   {
     label: "夜に使う",
-    note: "終電後や遅い時間の候補を残す",
-    hrefGenre: "netcafe",
+    note: "遅い時間まで開いている店を残す",
     filter: (shop) => shop.late
   },
   {
     label: "車で行く",
-    note: "駐車場がある施設と周辺駐車場を見る",
-    hrefGenre: "parking-lot",
-    filter: (shop) => shop.parking || shop.genre_key === "parking-lot"
-  },
-  {
-    label: "休憩・滞在",
-    note: "作業、休憩、時間調整に使える場所を見る",
-    hrefGenre: "cafe",
-    filter: (shop) => ["cafe", "netcafe", "video-box", "spa", "sauna", "karaoke", "movie-theater"].includes(shop.genre_key)
-  },
-  {
-    label: "出店前に見る",
-    note: "競合、駐車場、滞在需要をまとめて確認",
-    hrefGenre: "opening-area-research",
-    filter: (shop) => ["office-tenant", "opening-area-research", "parking-lot", "parking-management", "vending-machine-installation"].includes(shop.genre_key)
+    note: "駐車場がある店を見る",
+    filter: (shop) => shop.parking
   }
 ];
 
 function areaUseCasePanel(area, depth) {
   const items = shopsForArea(area);
+  // 0件のカードは出さない。該当が無いのに入口だけ並べても選べない。
   const cards = areaUseCases.map((useCase) => {
     const count = items.filter(useCase.filter).length;
-    return `<a class="signal-card" href="${areaGenreHref(area, useCase.hrefGenre, depth)}"><strong>${useCase.label}</strong><span>${count}件</span><small>${useCase.note}</small></a>`;
-  }).join("");
-  return `<section class="section area-signals"><div class="section-head"><p class="eyebrow">探し方</p><h2>${area.label}で目的から選ぶ</h2><p>近さ、夜の使いやすさ、車での行きやすさ、滞在しやすさを分けて確認できます。</p></div><div class="signal-grid">${cards}</div></section>`;
+    if (!count) return "";
+    return `<a class="signal-card" href="${areaGenreHref(area, "adult-shop", depth)}"><strong>${useCase.label}</strong><span>${count}件</span><small>${useCase.note}</small></a>`;
+  }).filter(Boolean).join("");
+  if (!cards) return "";
+  return `<section class="section area-signals"><div class="section-head"><p class="eyebrow">探し方</p><h2>${area.label}で目的から選ぶ</h2><p>駅からの近さ、夜の使いやすさ、車での行きやすさを分けて確認できます。</p></div><div class="signal-grid">${cards}</div></section>`;
 }
 
 function topGenrePanel(area, depth) {
@@ -834,7 +841,10 @@ function openingMetricScore(area, genreKeys) {
   const items = shops.filter((shop) => shop.area_key === area.key && genreKeys.includes(shop.genre_key));
   const lateCount = items.filter((shop) => shop.late).length;
   const parkingCount = items.filter((shop) => shop.parking).length;
-  const stationCount = items.filter((shop) => Number(shop.station_walk_minutes) <= 10).length;
+  const stationCount = items.filter((shop) => {
+    const minutes = walkMinutes(shop);
+    return minutes !== null && minutes <= 10;
+  }).length;
   const score = Math.min(100, Math.round(items.length * 12 + lateCount * 8 + parkingCount * 4 + stationCount * 3));
   const rank = score >= 75 ? "高め" : score >= 45 ? "中" : "これから確認";
   return { count: items.length, rank, score };
@@ -880,7 +890,7 @@ function prefectureIndex(prefecture) {
         <p>${prefecture.label}の主要市区町村から、アダルトショップを探せます。駅からの近さ、駐車場、営業時間、通販の選択肢も確認できます。</p>
         <nav class="breadcrumb"><a href="${home(depth)}">全国</a><span>/</span><span>${prefecture.label}</span></nav>
       </header>
-      <section class="answer-box"><h2>市区町村から探す</h2><div class="category-grid">${prefAreas.map((area) => `<a class="category-card" href="./${area.path}/"><span class="category-icon">${area.label.slice(0, 1)}</span><strong>${area.label}</strong><small>${area.station}周辺の店舗を確認</small></a>`).join("")}</div></section>
+      <section class="answer-box"><h2>市区町村から探す</h2><div class="category-grid">${prefAreas.map((area) => `<a class="category-card" href="./${area.path}/"><span class="category-icon">${area.label.slice(0, 1)}</span><strong>${area.label}</strong><small>${area.station ? `${escapeHtml(area.station)}周辺の店舗を確認` : "エリア内の店舗を確認"}</small></a>`).join("")}</div></section>
       ${prefectureAreaHighlights(prefecture, depth)}
       <section class="two-column"><div><section class="section"><h2>${prefecture.label}の掲載店舗</h2><div class="shop-list">${shopCards(prefShops, depth)}</div></section></div><aside class="side-column"><section class="side-block"><h2>確認できること</h2><a href="${home(depth)}">近い順で探す</a><a href="${home(depth)}">予算の安い順で探す</a><a href="${home(depth)}guide/discreet-buying/">人目を気にせず買う方法</a></section></aside></section>`;
 
@@ -901,7 +911,7 @@ function areaIndex(area) {
   const body = `      <header class="page-header">
         <p class="eyebrow">${area.prefecture}</p>
         <h1>${area.label}のアダルトショップ一覧</h1>
-        <p>${area.label}で探せるアダルトショップをまとめています。${area.station}周辺、駐車場、夜まで営業、クーポンの有無を確認できます。</p>
+        <p>${area.label}で探せるアダルトショップをまとめています。${area.station ? `${escapeHtml(area.station)}周辺、` : ""}駐車場、夜まで営業、クーポンの有無を確認できます。</p>
         <nav class="breadcrumb"><a href="${home(depth)}">全国</a><span>/</span><a href="${home(depth)}area/${area.prefecture_key}/">${area.prefecture}</a><span>/</span><span>${area.label}</span></nav>
       </header>
       ${areaUseCasePanel(area, depth)}
@@ -933,7 +943,7 @@ function genrePage(area, genre) {
       </header>
       <section class="answer-box"><h2>このページで確認できること</h2><ul><li>${genre.description}</li><li>店舗名、住所、駅からの目安、予算、特徴を一覧で比較できます。</li><li>行く前に予約、クーポン、駐車場、周辺の飲食店を確認できます。</li></ul></section>
       <section class="monetization-strip"><div><p class="eyebrow">あわせて確認</p><h2>${supportHeading(genre)}</h2><p>${supportText(area, genre)}</p></div><div class="route-actions"><a class="button button-light" href="${supportPrimaryUrl(area, genre)}">${supportPrimaryLabel(genre)}</a><a class="button button-light" href="${supportSecondaryUrl(genre, area)}">${supportSecondaryLabel(genre)}</a></div></section>
-      <section class="two-column"><div><section class="section"><h2>${area.label}の${genre.label}</h2><div class="shop-list">${shopCards(items, depth)}</div></section>${mapEmbeds(items)}<section class="section"><h2>比較表</h2><table class="info-table"><tr><th>店舗</th><th>駅</th><th>予算</th><th>特徴</th></tr>${comparisonRows.map((shop) => `<tr><td>${escapeHtml(shop.name)}</td><td>${escapeHtml(shop.nearest_station)} 徒歩約${escapeHtml(shop.station_walk_minutes)}分</td><td>${escapeHtml(shop.budget_label)}</td><td>${[shop.parking ? "駐車場" : "", shop.late ? "夜まで" : "", shop.coupon ? "クーポン" : "", shop.smoking_area ? `喫煙: ${shop.smoking_area}` : "", shop.power_seat ? `電源: ${shop.power_seat}` : "", shop.wifi ? `Wi-Fi: ${shop.wifi}` : "", shop.eat_in ? `イートイン: ${shop.eat_in}` : ""].filter(Boolean).join(" / ") || "確認中"}</td></tr>`).join("")}</table></section>${relatedGenrePanel(area, genre, depth)}</div><aside class="side-column"><section class="side-block"><h2>同じエリア</h2>${genreLinks(area, depth)}</section><section class="side-block"><h2>近隣の${genre.label}</h2>${nearItems.map((shop) => `<a href="${toRelative(shop.url, depth)}">${shop.area_label} ${shop.name}</a>`).join("") || `<a href="${home(depth)}area/${area.prefecture_key}/">${area.prefecture}一覧を見る</a>`}</section>${subtleLinks(area, genre, depth)}</aside></section>
+      <section class="two-column"><div><section class="section"><h2>${area.label}の${genre.label}</h2><div class="shop-list">${shopCards(items, depth)}</div></section>${mapEmbeds(items)}<section class="section"><h2>比較表</h2><table class="info-table"><tr><th>店舗</th><th>駅</th><th>予算</th><th>特徴</th></tr>${comparisonRows.map((shop) => `<tr><td>${escapeHtml(shop.name)}</td><td>${stationLine(shop) || "確認中"}</td><td>${escapeHtml(shop.budget_label) || "確認中"}</td><td>${[shop.parking ? "駐車場" : "", shop.late ? "夜まで" : "", shop.coupon ? "クーポン" : "", shop.smoking_area ? `喫煙: ${shop.smoking_area}` : "", shop.power_seat ? `電源: ${shop.power_seat}` : "", shop.wifi ? `Wi-Fi: ${shop.wifi}` : "", shop.eat_in ? `イートイン: ${shop.eat_in}` : ""].filter(Boolean).join(" / ") || "確認中"}</td></tr>`).join("")}</table></section>${relatedGenrePanel(area, genre, depth)}</div><aside class="side-column"><section class="side-block"><h2>同じエリア</h2>${genreLinks(area, depth)}</section><section class="side-block"><h2>近隣の${genre.label}</h2>${nearItems.map((shop) => `<a href="${toRelative(shop.url, depth)}">${shop.area_label} ${shop.name}</a>`).join("") || `<a href="${home(depth)}area/${area.prefecture_key}/">${area.prefecture}一覧を見る</a>`}</section>${subtleLinks(area, genre, depth)}</aside></section>
 ${openingResearchExtra}      <section class="section"><h2>よくある確認</h2><div class="faq-list"><article class="faq-item"><h3>${area.label}で${genre.label}を探す時の見方は？</h3><p>駅からの距離、駐車場、営業時間、予算目安を先に見ると選びやすくなります。</p></article><article class="faq-item"><h3>行く前に確認した方がよいことは？</h3><p>営業時間、料金、取扱内容、クーポン、駐車場は変わる場合があります。来店前に公式情報や地図情報も確認してください。</p></article></div></section>`;
 
   write(path.join(root, "area", area.prefecture_key, ...area.path.split("/"), genre.key, "index.html"), pageShell({
